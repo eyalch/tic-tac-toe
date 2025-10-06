@@ -1,0 +1,43 @@
+services:
+  nats:
+    image: nats:2
+
+  server-a:
+    build: .
+    environment:
+      - NATS_URL=nats://nats:4222
+      - LEADER=true
+    ports:
+      - "3001:3000"
+    depends_on:
+      - nats
+
+  server-b:
+    build: .
+    environment:
+      - NATS_URL=nats://nats:4222
+      - LEADER=false
+    ports:
+      - "3002:3000"
+    depends_on:
+      - nats
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "8080:8080"
+    configs:
+      - source: caddy_config
+        target: /etc/caddy/Caddyfile
+    depends_on:
+      - server-a
+      - server-b
+
+configs:
+  caddy_config:
+    content: |
+      :8080 {
+          reverse_proxy server-a:3000 server-b:3000 {
+              lb_policy round_robin
+          }
+      }
