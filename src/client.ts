@@ -1,11 +1,8 @@
 import readline from "node:readline/promises"
 
-import pino from "pino"
 import { z } from "zod"
 
 import { BoardSchema, SymbolSchema, zJsonCodec } from "./schemas.ts"
-
-const logger = pino()
 
 const WS_URL = process.env["WS_URL"] || process.argv[2] || "ws://localhost:8080"
 
@@ -77,11 +74,11 @@ async function maybePrompt(ws: WebSocket) {
   ws.send(JSON.stringify({ type: "move", row, col }))
 }
 
-logger.info({ WS_URL }, "Connecting...")
+console.log("Connecting...", { WS_URL })
 const socket = new WebSocket(WS_URL)
 
 socket.addEventListener("open", () => {
-  logger.info("Connected. Sending join...")
+  console.log("Connected. Sending join...")
   socket.send(JSON.stringify({ type: "join" }))
 })
 
@@ -108,7 +105,7 @@ socket.addEventListener("message", (event) => {
   ).safeDecode(event.data)
 
   if (!parsed.success) {
-    logger.warn({ data: event.data }, "Unknown message")
+    console.warn("Unknown message", event.data)
     return
   }
 
@@ -118,7 +115,7 @@ socket.addEventListener("message", (event) => {
     case "joined":
       mySymbol = data.symbol
       clientId = data.clientId
-      logger.info({ mySymbol, clientId }, "Joined game")
+      console.log("Joined game", { mySymbol, clientId })
       break
 
     case "update":
@@ -135,10 +132,10 @@ socket.addEventListener("message", (event) => {
 })
 
 socket.addEventListener("close", () => {
-  logger.info("Disconnected")
+  console.log("Disconnected")
   rl.close()
 })
 
 socket.addEventListener("error", (error) => {
-  logger.error({ error }, "WebSocket error")
+  console.error("WebSocket error", error)
 })
