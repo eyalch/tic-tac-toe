@@ -8,7 +8,6 @@ type GameState = {
   players: { X?: string; O?: string } // clientId assignments
   status: "playing" | "win" | "draw"
   winner?: SymbolXO
-  version: number
 }
 
 export function newGameState(): GameState {
@@ -21,7 +20,6 @@ export function newGameState(): GameState {
     nextTurn: "X",
     players: {},
     status: "playing",
-    version: 0,
   }
 }
 
@@ -76,7 +74,6 @@ export function applyMove(
       row,
       state.board[row]!.with(col, playerSymbol) as Board[number],
     ) as Board,
-    version: state.version + 1,
   }
 
   const winner = checkWin(next.board)

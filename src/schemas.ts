@@ -15,7 +15,6 @@ export const GameStateSchema = z.object({
   players: z.object({ X: z.string().optional(), O: z.string().optional() }),
   status: z.enum(["playing", "win", "draw"]),
   winner: SymbolSchema.optional(),
-  version: z.number().int().nonnegative(),
 })
 
 export const zJsonCodec = <T extends z.core.$ZodType>(schema: T) =>

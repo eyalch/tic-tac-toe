@@ -29,7 +29,6 @@ Game state (simplified):
   players: { X?: clientId, O?: clientId },
   status: "playing" | "win" | "draw",
   winner?: "X" | "O",
-  version: number
 }
 ```
 
@@ -56,7 +55,7 @@ Game state (simplified):
 
 ```text
 { "type": "joined", "clientId": "...", "symbol": "X" }
-{ "type": "update", "board": [[...],[...],[...]], "nextTurn": "O", "status": "playing" | "win" | "draw", "winner": "X"?, "version": 3 }
+{ "type": "update", "board": [[...],[...],[...]], "nextTurn": "O", "status": "playing" | "win" | "draw", "winner": "X"? }
 { "type": "error", "message": "..." }
 ```
 

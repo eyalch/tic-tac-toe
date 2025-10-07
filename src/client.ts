@@ -17,7 +17,6 @@ let latest:
       nextTurn: "X" | "O"
       status: "playing" | "win" | "draw"
       winner?: "X" | "O"
-      version: number
     }
   | undefined
 
@@ -100,7 +99,6 @@ socket.addEventListener("message", (event) => {
         nextTurn: SymbolSchema,
         status: z.enum(["playing", "win", "draw"]),
         winner: SymbolSchema.optional(),
-        version: z.number().int().nonnegative(),
       }),
       z.object({
         type: z.literal("error"),

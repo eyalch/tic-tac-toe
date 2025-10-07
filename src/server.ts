@@ -60,7 +60,6 @@ async function handleUpdates() {
         nextTurn: state.nextTurn,
         status: state.status,
         winner: state.winner,
-        version: state.version,
       })
 
       for (const ws of conns.keys()) {
@@ -142,7 +141,6 @@ wss.on("connection", (ws) => {
                 nextTurn: parsedJoin.state.nextTurn,
                 status: parsedJoin.state.status,
                 winner: parsedJoin.state.winner,
-                version: parsedJoin.state.version,
               }),
             )
           } else {
