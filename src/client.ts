@@ -2,15 +2,17 @@ import readline from "node:readline/promises"
 
 import { z } from "zod"
 
-import { BoardSchema, SymbolSchema, zJsonCodec } from "./schemas.ts"
-
 const WS_URL = process.env["WS_URL"] || process.argv[2] || "ws://localhost:8080"
 
-let mySymbol: "X" | "O" | undefined
-let clientId: string | undefined
+let client:
+  | {
+      symbol: "X" | "O"
+      id: string
+    }
+  | undefined
 let latest:
   | {
-      board: ("" | "X" | "O")[][]
+      board: Array<"" | "X" | "O">[]
       nextTurn: "X" | "O"
       status: "playing" | "win" | "draw"
       winner?: "X" | "O"
@@ -27,10 +29,12 @@ function render() {
 
   console.clear()
   console.log("Tic-Tac-Toe (CLI)")
-  console.log(`You are: ${mySymbol ?? "?"} | Client: ${clientId}`)
+  console.log(
+    `You are: ${client ? client.symbol : "?"} | Client: ${client ? client.id : ""}`,
+  )
   console.log(
     latest.board
-      .map((row) => ` ${row[0] || " "} | ${row[1] || " "} | ${row[2] || " "} `)
+      .map((row) => ` ${row.map((c) => c || " ").join(" | ")} `)
       .join("\n---+---+---\n"),
   )
 
@@ -50,9 +54,9 @@ function render() {
 }
 
 async function maybePrompt(ws: WebSocket) {
-  if (!latest || !mySymbol) return
+  if (!latest || !client) return
   if (latest.status !== "playing") return
-  if (latest.nextTurn !== mySymbol) return
+  if (latest.nextTurn !== client.symbol) return
 
   const input = await rl.question("Your move (row col): ")
 
@@ -82,27 +86,31 @@ socket.addEventListener("open", () => {
   socket.send(JSON.stringify({ type: "join" }))
 })
 
+const SymbolSchema = z.enum(["X", "O"])
+
+const messageCodec = jsonCodec(
+  z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("joined"),
+      clientId: z.string(),
+      symbol: SymbolSchema,
+    }),
+    z.object({
+      type: z.literal("update"),
+      board: z.array(z.union([z.literal(""), SymbolSchema]).array()),
+      nextTurn: SymbolSchema,
+      status: z.enum(["playing", "win", "draw"]),
+      winner: SymbolSchema.optional(),
+    }),
+    z.object({
+      type: z.literal("error"),
+      message: z.string(),
+    }),
+  ]),
+)
+
 socket.addEventListener("message", (event) => {
-  const parsed = zJsonCodec(
-    z.union([
-      z.object({
-        type: z.literal("joined"),
-        clientId: z.string(),
-        symbol: SymbolSchema,
-      }),
-      z.object({
-        type: z.literal("update"),
-        board: BoardSchema,
-        nextTurn: SymbolSchema,
-        status: z.enum(["playing", "win", "draw"]),
-        winner: SymbolSchema.optional(),
-      }),
-      z.object({
-        type: z.literal("error"),
-        message: z.string(),
-      }),
-    ]),
-  ).safeDecode(event.data)
+  const parsed = messageCodec.safeDecode(event.data)
 
   if (!parsed.success) {
     console.warn("Unknown message", event.data)
@@ -113,9 +121,11 @@ socket.addEventListener("message", (event) => {
 
   switch (data.type) {
     case "joined":
-      mySymbol = data.symbol
-      clientId = data.clientId
-      console.log("Joined game", { mySymbol, clientId })
+      client = { symbol: data.symbol, id: data.clientId }
+      console.log("Joined game", {
+        mySymbol: data.symbol,
+        clientId: data.clientId,
+      })
       break
 
     case "update":
@@ -139,3 +149,23 @@ socket.addEventListener("close", () => {
 socket.addEventListener("error", (error) => {
   console.error("WebSocket error", error)
 })
+
+/** @see https://zod.dev/codecs#jsonschema */
+function jsonCodec<T extends z.core.$ZodType>(schema: T) {
+  return z.codec(z.string(), schema, {
+    decode: (jsonString, ctx) => {
+      try {
+        return JSON.parse(jsonString)
+      } catch (err: any) {
+        ctx.issues.push({
+          code: "invalid_format",
+          format: "json",
+          input: jsonString,
+          message: err.message,
+        })
+        return z.NEVER
+      }
+    },
+    encode: (value) => JSON.stringify(value),
+  })
+}
