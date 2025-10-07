@@ -1,4 +1,4 @@
-FROM node:22.17.1-alpine
+FROM node:24.9.0-alpine
 
 WORKDIR /app
 
@@ -7,4 +7,4 @@ RUN npm ci
 
 COPY src ./
 
-CMD ["node", "--experimental-strip-types", "server.ts"]
+CMD ["node", "server.ts"]
