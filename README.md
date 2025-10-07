@@ -108,21 +108,17 @@ Two ways to connect clients:
 In two separate terminals, run:
 
 ```shell
-# Terminal 1
-npm run client -- ws://localhost:8080
-
-# Terminal 2
-npm run client -- ws://localhost:8080
+./client.ts
 ```
 
 Alternatively, to ensure connecting to different servers:
 
 ```shell
 # Terminal 1 -> Server A
-npm run client -- ws://localhost:3001
+./client.ts ws://localhost:3001
 
 # Terminal 2 -> Server B
-npm run client -- ws://localhost:3002
+./client.ts ws://localhost:3002
 ```
 
 Gameplay:
@@ -147,8 +143,8 @@ PORT=3001 LEADER=true npm run dev
 PORT=3002 LEADER=false npm run dev
 
 # Then connect two clients (in separate terminals):
-npm run client -- ws://localhost:3001
-npm run client -- ws://localhost:3002
+./client.ts ws://localhost:3001
+./client.ts ws://localhost:3002
 ```
 
 ## Where AI was used

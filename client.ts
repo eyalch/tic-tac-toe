@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import readline from "node:readline/promises"
 
 import { z } from "zod"

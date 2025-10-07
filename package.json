@@ -3,7 +3,6 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.ts",
-    "client": "node client.ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
